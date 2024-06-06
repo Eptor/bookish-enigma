@@ -8,16 +8,38 @@
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Ubicaciones</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="dialogCrearUbicacion = true">Crear Ubicación</v-btn>
         </v-toolbar>
       </template>
       <template v-slot:item.imagen="{ item }">
         <v-img :src="item.imagen" max-height="100" max-width="100"></v-img>
       </template>
     </v-data-table>
+
+    <!-- Diálogo para crear ubicación -->
+    <v-dialog v-model="dialogCrearUbicacion" max-width="600px">
+      <v-card>
+        <v-card-title>
+          Crear Nueva Ubicación
+        </v-card-title>
+        <v-card-text>
+          <v-form @submit.prevent="crearUbicacion">
+            <v-text-field v-model="nuevaUbicacion.nombre" label="Nombre" required></v-text-field>
+            <v-text-field v-model="nuevaUbicacion.descripcion" label="Descripción" required></v-text-field>
+            <v-text-field v-model="nuevaUbicacion.imagen" label="URL de Imagen" required></v-text-field>
+            <v-btn type="submit" color="primary">Crear</v-btn>
+            <v-btn color="primary" @click="cancelarCrearUbicacion">Cancelar</v-btn>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -27,7 +49,13 @@ export default {
         { text: 'Descripción', value: 'descripcion' },
         { text: 'Imagen', value: 'imagen' },
       ],
-      ubicaciones: [], // Aquí irán los datos que obtendrás del backend
+      ubicaciones: [], // Inicializamos como un array vacío
+      dialogCrearUbicacion: false,
+      nuevaUbicacion: {
+        nombre: '',
+        descripcion: '',
+        imagen: '',
+      },
     };
   },
   mounted() {
@@ -36,17 +64,57 @@ export default {
   },
   methods: {
     async fetchUbicaciones() {
-      // Simulación de datos. Reemplaza con la llamada real al backend.
-      this.ubicaciones = [
-        {
-          id: 1,
-          nombre: 'Oficina Principal',
-          descripcion: 'Edificio A, Planta Baja',
-          imagen: 'url_de_imagen',
-        },
-        // Más datos...
-      ];
+      try {
+        const response = await axios.get('http://localhost:8000/ubicaciones');
+        if (Array.isArray(response.data)) {
+          this.ubicaciones = response.data;
+        } else {
+          console.log('Respuesta inválida desde el servidor:', response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching ubicaciones:', error);
+      }
+    },
+
+    async crearUbicacion() {
+      try {
+        const response = await axios.post('http://localhost:8000/ubicaciones', this.nuevaUbicacion);
+        console.log('Ubicación creada:', response.data);
+        
+        // Verificar si la respuesta es un objeto vacío {}
+        if (Object.keys(response.data).length === 0 && response.data.constructor === Object) {
+          console.log('La respuesta del servidor es un objeto vacío {}.');
+          // Podemos manejar esta situación de acuerdo a las necesidades del frontend
+        } else {
+          this.ubicaciones.push(response.data);
+        }
+
+        // Limpiar los campos de nuevaUbicacion y cerrar el diálogo
+        this.nuevaUbicacion = {
+          nombre: '',
+          descripcion: '',
+          imagen: '',
+        };
+        this.dialogCrearUbicacion = false;
+
+      } catch (error) {
+        console.error('Error creando ubicación:', error);
+      }
+    },
+
+    cancelarCrearUbicacion() {
+      // Limpiar los campos de nuevaUbicacion y cerrar el diálogo
+      this.nuevaUbicacion = {
+        nombre: '',
+        descripcion: '',
+        imagen: '',
+      };
+      this.dialogCrearUbicacion = false;
     },
   },
 };
 </script>
+
+<style scoped>
+/* Estilos específicos para este componente */
+</style>
