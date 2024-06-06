@@ -12,22 +12,23 @@
         <v-img :src="item.imagen" max-height="100" max-width="100"></v-img>
       </template>
       <template v-slot:item.action="{ item }">
+        <v-icon small @click="editarResponsable(item)">mdi-pencil</v-icon>
         <v-icon small @click="eliminarResponsable(item)">mdi-delete</v-icon>
       </template>
     </v-data-table>
 
-    <!-- Diálogo para crear responsable -->
+    <!-- Diálogo para crear/editar responsable -->
     <v-dialog v-model="dialogCrearResponsable" max-width="600px">
       <v-card>
         <v-card-title>
-          Crear Nuevo Responsable
+          {{ modoEdicion ? 'Editar Responsable' : 'Crear Nuevo Responsable' }}
         </v-card-title>
         <v-card-text>
-          <v-form @submit.prevent="crearResponsable">
+          <v-form @submit.prevent="modoEdicion ? guardarEdicion() : crearResponsable()">
             <v-text-field v-model="nuevoResponsable.numeroEmpleado" label="Número de Empleado" required></v-text-field>
             <v-text-field v-model="nuevoResponsable.nombre" label="Nombre" required></v-text-field>
             <v-text-field v-model="nuevoResponsable.imagen" label="URL de Imagen" required></v-text-field>
-            <v-btn type="submit" color="primary">Crear</v-btn>
+            <v-btn type="submit" color="primary">{{ modoEdicion ? 'Guardar Cambios' : 'Crear' }}</v-btn>
             <v-btn color="primary" @click="cancelarCrearResponsable">Cancelar</v-btn>
           </v-form>
         </v-card-text>
@@ -56,6 +57,8 @@ export default {
         nombre: '',
         imagen: '',
       },
+      modoEdicion: false,
+      responsableIdEnEdicion: null,
     };
   },
   mounted() {
@@ -82,6 +85,28 @@ export default {
       }
     },
 
+    async editarResponsable(responsable) {
+      this.modoEdicion = true;
+      this.responsableIdEnEdicion = responsable.id;
+      this.nuevoResponsable = { ...responsable };
+      this.dialogCrearResponsable = true;
+    },
+
+    async guardarEdicion() {
+      try {
+        await axios.put(`http://localhost:8000/responsables/${this.responsableIdEnEdicion}`, this.nuevoResponsable);
+        const index = this.responsables.findIndex(r => r.id === this.responsableIdEnEdicion);
+        if (index !== -1) {
+          this.responsables.splice(index, 1, this.nuevoResponsable);
+        }
+        this.dialogCrearResponsable = false;
+        this.resetNuevoResponsable();
+        this.modoEdicion = false;
+      } catch (error) {
+        console.error('Error saving edited responsable:', error);
+      }
+    },
+
     async eliminarResponsable(responsable) {
       try {
         await axios.delete(`http://localhost:8000/responsables/${responsable.id}`);
@@ -94,6 +119,7 @@ export default {
     cancelarCrearResponsable() {
       this.resetNuevoResponsable();
       this.dialogCrearResponsable = false;
+      this.modoEdicion = false;
     },
 
     resetNuevoResponsable() {
@@ -102,6 +128,7 @@ export default {
         nombre: '',
         imagen: '',
       };
+      this.responsableIdEnEdicion = null;
     },
   },
 };

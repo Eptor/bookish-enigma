@@ -21,6 +21,7 @@
         <span>{{ item.Responsable.nombre }}</span>
       </template>
       <template v-slot:item.action="{ item }">
+        <v-icon small @click="editarActivo(item)">mdi-pencil</v-icon>
         <v-icon small @click="eliminarActivo(item)">mdi-delete</v-icon>
       </template>
     </v-data-table>
@@ -28,7 +29,7 @@
     <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title>
-          <span class="headline">Nuevo Activo</span>
+          <span class="headline">{{ modoEdicion ? 'Editar Activo' : 'Nuevo Activo' }}</span>
         </v-card-title>
 
         <v-card-text>
@@ -41,7 +42,6 @@
 
             <!-- Agregar selección de Ubicación -->
             <v-select :items="ubicaciones" item-title="nombre" item-value="id" v-model="nuevoActivo.ubicacionId" label="Ubicaciones"></v-select>
-            
 
             <!-- Agregar selección de Responsable -->
             <v-select :items="responsables" item-title="nombre" item-value="id" v-model="nuevoActivo.responsableId" label="Responsables"></v-select>
@@ -52,7 +52,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="dialog = false">Cancelar</v-btn>
-          <v-btn color="blue darken-1" text @click="crearActivo">Guardar</v-btn>
+          <v-btn color="blue darken-1" text @click="modoEdicion ? guardarEdicion() : crearActivo()">{{ modoEdicion ? 'Guardar Cambios' : 'Guardar' }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -78,6 +78,8 @@ export default {
     });
     const ubicaciones = ref([]);
     const responsables = ref([]);
+    const modoEdicion = ref(false);
+    let activoIdEnEdicion = null;
 
     const headers = [
       { title: 'ID', value: 'id' },
@@ -136,6 +138,25 @@ export default {
       }
     };
 
+    const editarActivo = (activo) => {
+      modoEdicion.value = true;
+      activoIdEnEdicion = activo.id;
+      nuevoActivo.value = { ...activo };
+      dialog.value = true;
+    };
+
+    const guardarEdicion = async () => {
+      try {
+        await axios.put(`http://localhost:8000/activos/${activoIdEnEdicion}`, nuevoActivo.value);
+        fetchActivos();
+        dialog.value = false;
+        resetNuevoActivo();
+        modoEdicion.value = false;
+      } catch (error) {
+        console.error('Error saving edited activo:', error);
+      }
+    };
+
     const eliminarActivo = async (activo) => {
       try {
         await axios.delete(`http://localhost:8000/activos/${activo.id}`);
@@ -155,6 +176,7 @@ export default {
         ubicacionId: null,
         responsableId: null,
       };
+      activoIdEnEdicion = null;
     };
 
     onMounted(() => {
@@ -170,7 +192,10 @@ export default {
       nuevoActivo,
       ubicaciones,
       responsables,
+      modoEdicion,
       crearActivo,
+      editarActivo,
+      guardarEdicion,
       eliminarActivo,
     };
   },
