@@ -45,12 +45,12 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'ID', value: 'id' },
-        { text: 'Número de Serie', value: 'numeroSerie' },
-        { text: 'Número de Inventario UABC', value: 'numeroInventarioUABC' },
-        { text: 'Tipo', value: 'tipo' },
-        { text: 'Descripción', value: 'descripcion' },
-        { text: 'Imagen', value: 'imagen' },
+        { title: 'ID', value: 'id' },
+        { title: 'Número de Serie', value: 'numeroSerie' },
+        { title: 'Número de Inventario UABC', value: 'numeroInventarioUABC' },
+        { title: 'Tipo', value: 'tipo' },
+        { title: 'Descripción', value: 'descripcion' },
+        { title: 'Imagen', value: 'imagen' },
       ],
       activos: [],
       dialog: false,

@@ -44,10 +44,10 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'ID', value: 'id' },
-        { text: 'Nombre', value: 'nombre' },
-        { text: 'Descripción', value: 'descripcion' },
-        { text: 'Imagen', value: 'imagen' },
+        { title: 'ID', value: 'id' },
+        { title: 'Nombre', value: 'nombre' },
+        { title: 'Descripción', value: 'descripcion' },
+        { title: 'Imagen', value: 'imagen' },
       ],
       ubicaciones: [], // Inicializamos como un array vacío
       dialogCrearUbicacion: false,
