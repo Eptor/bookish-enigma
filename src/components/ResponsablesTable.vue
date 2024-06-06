@@ -11,6 +11,9 @@
       <template v-slot:item.imagen="{ item }">
         <v-img :src="item.imagen" max-height="100" max-width="100"></v-img>
       </template>
+      <template v-slot:item.action="{ item }">
+        <v-icon small @click="eliminarResponsable(item)">mdi-delete</v-icon>
+      </template>
     </v-data-table>
 
     <!-- Diálogo para crear responsable -->
@@ -44,8 +47,9 @@ export default {
         { title: 'Número de Empleado', value: 'numeroEmpleado' },
         { title: 'Nombre', value: 'nombre' },
         { title: 'Imagen', value: 'imagen' },
+        { title: 'Acciones', value: 'action', sortable: false },
       ],
-      responsables: [], // Inicializamos como un array vacío
+      responsables: [],
       dialogCrearResponsable: false,
       nuevoResponsable: {
         numeroEmpleado: '',
@@ -55,7 +59,6 @@ export default {
     };
   },
   mounted() {
-    // Llamada para obtener datos del backend
     this.fetchResponsables();
   },
   methods: {
@@ -63,7 +66,6 @@ export default {
       try {
         const response = await axios.get('http://localhost:8000/responsables');
         this.responsables = response.data;
-        console.log('Responsables:', this.responsables);
       } catch (error) {
         console.error('Error fetching responsables:', error);
       }
@@ -72,28 +74,34 @@ export default {
     async crearResponsable() {
       try {
         const response = await axios.post('http://localhost:8000/responsables', this.nuevoResponsable);
-        console.log('Responsable creado:', response.data);
         this.responsables.push(response.data);
         this.dialogCrearResponsable = false;
-
-        this.nuevoResponsable = {
-          numeroEmpleado: '',
-          nombre: '',
-          imagen: '',
-        };
+        this.resetNuevoResponsable();
       } catch (error) {
-        console.error('Error creando responsable:', error);
+        console.error('Error creating responsable:', error);
+      }
+    },
+
+    async eliminarResponsable(responsable) {
+      try {
+        await axios.delete(`http://localhost:8000/responsables/${responsable.id}`);
+        this.responsables = this.responsables.filter(r => r.id !== responsable.id);
+      } catch (error) {
+        console.error('Error deleting responsable:', error);
       }
     },
 
     cancelarCrearResponsable() {
-      // Limpiar los campos de nuevoResponsable y cerrar el diálogo
+      this.resetNuevoResponsable();
+      this.dialogCrearResponsable = false;
+    },
+
+    resetNuevoResponsable() {
       this.nuevoResponsable = {
         numeroEmpleado: '',
         nombre: '',
         imagen: '',
       };
-      this.dialogCrearResponsable = false;
     },
   },
 };

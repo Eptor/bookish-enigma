@@ -15,6 +15,9 @@
       <template v-slot:item.imagen="{ item }">
         <v-img :src="item.imagen" max-height="100" max-width="100"></v-img>
       </template>
+      <template v-slot:item.action="{ item }">
+        <v-icon small @click="eliminarUbicacion(item)">mdi-delete</v-icon>
+      </template>
     </v-data-table>
 
     <!-- Diálogo para crear ubicación -->
@@ -48,6 +51,7 @@ export default {
         { title: 'Nombre', value: 'nombre' },
         { title: 'Descripción', value: 'descripcion' },
         { title: 'Imagen', value: 'imagen' },
+        { title: 'Acciones', value: 'action', sortable: false },
       ],
       ubicaciones: [], // Inicializamos como un array vacío
       dialogCrearUbicacion: false,
@@ -99,6 +103,15 @@ export default {
 
       } catch (error) {
         console.error('Error creando ubicación:', error);
+      }
+    },
+
+    async eliminarUbicacion(ubicacion) {
+      try {
+        await axios.delete(`http://localhost:8000/ubicaciones/${ubicacion.id}`);
+        this.ubicaciones = this.ubicaciones.filter(u => u.id !== ubicacion.id);
+      } catch (error) {
+        console.error('Error eliminando ubicación:', error);
       }
     },
 

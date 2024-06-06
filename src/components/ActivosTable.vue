@@ -20,6 +20,9 @@
       <template v-slot:item.responsable="{ item }">
         <span>{{ item.Responsable.nombre }}</span>
       </template>
+      <template v-slot:item.action="{ item }">
+        <v-icon small @click="eliminarActivo(item)">mdi-delete</v-icon>
+      </template>
     </v-data-table>
 
     <v-dialog v-model="dialog" max-width="600px">
@@ -85,13 +88,13 @@ export default {
       { title: 'Imagen', value: 'imagen' },
       { title: 'Ubicación', value: 'Ubicacion.nombre' },
       { title: 'Responsable', value: 'Responsable.nombre' },
+      { title: 'Acciones', value: 'action', sortable: false },
     ];
 
     const fetchActivos = async () => {
       try {
         const response = await axios.get('http://localhost:8000/activos');
         activos.value = Array.isArray(response.data) ? response.data : [];
-        console.log('Activos:', activos.value);
       } catch (error) {
         console.error('Error fetching activos:', error);
         activos.value = [];
@@ -105,7 +108,6 @@ export default {
           id: ubicacion.id,
           nombre: ubicacion.nombre,
         }));
-        console.log('Ubicaciones:', ubicaciones.value);
       } catch (error) {
         console.error('Error fetching ubicaciones:', error);
       }
@@ -118,7 +120,6 @@ export default {
           id: responsable.id,
           nombre: responsable.nombre,
         }));
-        console.log('Responsables:', responsables.value);
       } catch (error) {
         console.error('Error fetching responsables:', error);
       }
@@ -126,22 +127,34 @@ export default {
 
     const crearActivo = async () => {
       try {
-        console.log('Nuevo Activo:', nuevoActivo.value);
         await axios.post('http://localhost:8000/activos', nuevoActivo.value);
         fetchActivos();
         dialog.value = false;
-        nuevoActivo.value = {
-          numeroSerie: '',
-          numeroInventarioUABC: '',
-          tipo: '',
-          descripcion: '',
-          imagen: '',
-          ubicacionId: null,
-          responsableId: null,
-        };
+        resetNuevoActivo();
       } catch (error) {
         console.error('Error creating activo:', error);
       }
+    };
+
+    const eliminarActivo = async (activo) => {
+      try {
+        await axios.delete(`http://localhost:8000/activos/${activo.id}`);
+        fetchActivos();
+      } catch (error) {
+        console.error('Error deleting activo:', error);
+      }
+    };
+
+    const resetNuevoActivo = () => {
+      nuevoActivo.value = {
+        numeroSerie: '',
+        numeroInventarioUABC: '',
+        tipo: '',
+        descripcion: '',
+        imagen: '',
+        ubicacionId: null,
+        responsableId: null,
+      };
     };
 
     onMounted(() => {
@@ -158,6 +171,7 @@ export default {
       ubicaciones,
       responsables,
       crearActivo,
+      eliminarActivo,
     };
   },
 };
